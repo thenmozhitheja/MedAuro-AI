@@ -1,0 +1,2630 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Offline AI Hospital - Doctor Dashboard</title>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            color: #222;
+        }
+
+        /* HEADER */
+
+        header {
+            background: #ffffff;
+            padding: 18px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-section h1 {
+            font-size: 24px;
+            color: #1d4ed8;
+        }
+
+        .logo-section p {
+            font-size: 13px;
+            color: #777;
+            margin-top: 4px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .nav-btn {
+            text-decoration: none;
+            background: #2563eb;
+            color: white;
+            padding: 9px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+
+        .status {
+            padding: 9px 14px;
+            border-radius: 20px;
+            background: #dcfce7;
+            color: #166534;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        /* MAIN */
+
+        .container {
+            width: 95%;
+            max-width: 1400px;
+            margin: 25px auto;
+        }
+
+        /* SUMMARY CARDS */
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            transition: 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+        }
+
+        .card h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .card .number {
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .total .number {
+            color: #2563eb;
+        }
+
+        .urgent .number {
+            color: #dc2626;
+        }
+
+        .moderate .number {
+            color: #ea580c;
+        }
+
+        .normal .number {
+            color: #16a34a;
+        }
+
+        .pending .number {
+            color: #d97706;
+        }
+
+        /* SECTIONS */
+
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            margin-bottom: 25px;
+        }
+
+        .section h2 {
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        /* CHART */
+
+        .chart-container {
+            max-width: 500px;
+            height: 350px;
+            margin: auto;
+        }
+
+        /* SEARCH */
+
+        .filter-area {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-area input,
+        .filter-area select {
+            padding: 11px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+            background: white;
+        }
+
+        .filter-area input {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .filter-area input:focus,
+        .filter-area select:focus {
+            border-color: #2563eb;
+        }
+
+        /* TABLE */
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 850px;
+        }
+
+        th {
+            background: #f1f5f9;
+            padding: 13px;
+            text-align: left;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        td {
+            padding: 13px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        /* PRIORITY */
+
+        .priority {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .priority-urgent {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .priority-moderate {
+            background: #ffedd5;
+            color: #c2410c;
+        }
+
+        .priority-normal {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        /* SYNC */
+
+        .sync {
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        /* VIEW BUTTON */
+
+        .view-btn {
+            border: none;
+            background: #2563eb;
+            color: white;
+            padding: 7px 12px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .view-btn:hover {
+            background: #1d4ed8;
+        }
+
+        /* MODAL */
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            padding: 20px;
+        }
+
+        .modal-box {
+            background: white;
+            width: 100%;
+            max-width: 550px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 15px;
+            padding: 25px;
+            position: relative;
+        }
+
+        .modal-box h2 {
+            color: #1d4ed8;
+            margin-bottom: 20px;
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 18px;
+            top: 15px;
+            border: none;
+            background: #fee2e2;
+            color: #dc2626;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .detail {
+            margin-bottom: 13px;
+        }
+
+        .detail strong {
+            display: block;
+            color: #64748b;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .detail span {
+            font-size: 15px;
+        }
+
+        .ai-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #eff6ff;
+            border-left: 4px solid #2563eb;
+            border-radius: 8px;
+        }
+
+        .ai-box h3 {
+            margin-bottom: 8px;
+            color: #1d4ed8;
+        }
+
+        .ai-box p {
+            line-height: 1.5;
+            color: #334155;
+        }
+
+        /* NO RESULTS */
+
+        .no-results {
+            text-align: center;
+            padding: 30px;
+            color: #777;
+            display: none;
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 900px) {
+
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            header {
+                align-items: flex-start;
+                gap: 15px;
+                flex-direction: column;
+            }
+
+            .header-right {
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 600px) {
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                width: 92%;
+            }
+
+            .section {
+                padding: 18px;
+            }
+
+            .header-right {
+                width: 100%;
+            }
+
+            .nav-btn {
+                font-size: 12px;
+                padding: 8px 10px;
+            }
+
+            .status {
+                font-size: 12px;
+            }
+        }
+
+        /* =========================================
+   ACTIVITY HISTORY
+========================================= */
+
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            background: #f8fafc;
+        }
+
+        .activity-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .activity-added {
+            background: #dcfce7;
+        }
+
+        .activity-edited {
+            background: #fef3c7;
+        }
+
+        .activity-deleted {
+            background: #fee2e2;
+        }
+
+        .activity-synced {
+            background: #dbeafe;
+        }
+
+        .activity-info {
+            flex: 1;
+        }
+
+        .activity-action {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .activity-details {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: #94a3b8;
+            white-space: nowrap;
+        }
+
+        .no-activity {
+            text-align: center;
+            padding: 25px;
+            color: #777;
+        }
+
+        @media (max-width: 600px) {
+
+            .activity-item {
+                align-items: flex-start;
+            }
+
+            .activity-time {
+                white-space: normal;
+            }
+
+        }
+
+        /* =========================================
+   MODERN UI ENHANCEMENT - STEP 1
+========================================= */
+
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 30%),
+                #f5f7fb;
+            color: #1e293b;
+        }
+
+        /* =========================================
+   HEADER
+========================================= */
+
+        header {
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            padding: 16px 32px;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+        }
+
+        .logo-section h1 {
+            font-size: 25px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, #2563eb, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-section p {
+            color: #64748b;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        /* =========================================
+   NAV BUTTONS
+========================================= */
+
+        .nav-btn {
+            background: #ffffff;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+            padding: 9px 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+        }
+
+        .nav-btn:hover {
+            background: #eff6ff;
+            color: #2563eb;
+            border-color: #bfdbfe;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(37, 99, 235, 0.12);
+        }
+
+        /* =========================================
+   SYSTEM STATUS
+========================================= */
+
+        .status {
+            border: 1px solid rgba(22, 101, 52, 0.12);
+            box-shadow: 0 3px 10px rgba(22, 101, 52, 0.08);
+            font-size: 12px;
+            letter-spacing: 0.2px;
+        }
+
+        /* =========================================
+   MAIN CONTAINER
+========================================= */
+
+        .container {
+            width: 94%;
+            max-width: 1450px;
+            margin: 30px auto;
+        }
+
+        /* =========================================
+   SUMMARY CARDS
+========================================= */
+
+        .cards {
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .card {
+            position: relative;
+            overflow: hidden;
+            padding: 23px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 18px;
+            box-shadow:
+                0 5px 18px rgba(15, 23, 42, 0.06),
+                0 1px 3px rgba(15, 23, 42, 0.04);
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #2563eb, #06b6d4);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow:
+                0 12px 28px rgba(15, 23, 42, 0.10),
+                0 2px 5px rgba(15, 23, 42, 0.05);
+        }
+
+        .card h3 {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .card .number {
+            font-size: 34px;
+            line-height: 1;
+            letter-spacing: -1px;
+        }
+
+        /* Different card accents */
+
+        .total::before {
+            background: linear-gradient(90deg, #2563eb, #60a5fa);
+        }
+
+        .urgent::before {
+            background: linear-gradient(90deg, #dc2626, #fb7185);
+        }
+
+        .moderate::before {
+            background: linear-gradient(90deg, #ea580c, #fb923c);
+        }
+
+        .normal::before {
+            background: linear-gradient(90deg, #16a34a, #4ade80);
+        }
+
+        .pending::before {
+            background: linear-gradient(90deg, #d97706, #fbbf24);
+        }
+
+        /* =========================================
+   SECTIONS
+========================================= */
+
+        .section {
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 18px;
+            padding: 26px;
+            margin-bottom: 28px;
+            box-shadow:
+                0 5px 20px rgba(15, 23, 42, 0.05),
+                0 1px 3px rgba(15, 23, 42, 0.03);
+        }
+
+        .section h2 {
+            font-size: 19px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 22px;
+        }
+
+        /* =========================================
+   FILTER AREA
+========================================= */
+
+        .filter-area {
+            gap: 14px;
+        }
+
+        .filter-area input,
+        .filter-area select {
+            border: 1px solid #dbe2ea;
+            border-radius: 11px;
+            padding: 12px 15px;
+            background: #f8fafc;
+            transition: 0.2s;
+        }
+
+        .filter-area input:hover,
+        .filter-area select:hover {
+            border-color: #93c5fd;
+        }
+
+        .filter-area input:focus,
+        .filter-area select:focus {
+            background: #ffffff;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+        }
+
+        /* =========================================
+   VIEW BUTTON
+========================================= */
+
+        .view-btn {
+            border-radius: 8px;
+            font-weight: 600;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(15, 23, 42, 0.08);
+        }
+
+        .view-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(15, 23, 42, 0.12);
+        }
+
+        /* =========================================
+   MODERN UI ENHANCEMENT - STEP 2
+   TABLE + STATUS + ACTIVITY + MODAL
+========================================= */
+
+        /* =========================================
+   TABLE
+========================================= */
+
+        .table-wrapper {
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            overflow-x: auto;
+            background: #ffffff;
+        }
+
+        table {
+            min-width: 900px;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            padding: 15px 14px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        td {
+            padding: 15px 14px;
+            border-bottom: 1px solid #eef2f7;
+            color: #334155;
+            vertical-align: middle;
+        }
+
+        tbody tr {
+            transition: 0.18s ease;
+        }
+
+        tbody tr:hover {
+            background: #f8fbff;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Patient name */
+
+        td strong {
+            color: #1e293b;
+            font-weight: 700;
+        }
+
+        /* =========================================
+   PRIORITY BADGES
+========================================= */
+
+        .priority {
+            padding: 6px 11px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            letter-spacing: 0.3px;
+        }
+
+        .priority-urgent {
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+        .priority-moderate {
+            background: #fff7ed;
+            color: #c2410c;
+            border: 1px solid #fed7aa;
+        }
+
+        .priority-normal {
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+
+        /* =========================================
+   SYNC STATUS
+========================================= */
+
+        .sync {
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        td .sync {
+            color: #15803d;
+        }
+
+        /* =========================================
+   ACTION BUTTONS
+========================================= */
+
+        .view-btn {
+            padding: 7px 10px;
+            margin: 2px;
+            border: none;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .view-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(0.96);
+        }
+
+        .view-btn:active {
+            transform: translateY(0);
+        }
+
+        /* =========================================
+   ACTIVITY HISTORY
+========================================= */
+
+        .activity-list {
+            position: relative;
+            gap: 12px;
+        }
+
+        .activity-item {
+            position: relative;
+            padding: 15px 17px;
+            border: 1px solid #e5e7eb;
+            border-radius: 13px;
+            background: linear-gradient(135deg,
+                    #ffffff,
+                    #f8fafc);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+            transition: 0.2s ease;
+        }
+
+        .activity-item:hover {
+            transform: translateX(4px);
+            border-color: #bfdbfe;
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.08);
+        }
+
+        .activity-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            font-size: 18px;
+            box-shadow: 0 3px 8px rgba(15, 23, 42, 0.06);
+        }
+
+        .activity-added {
+            background: #ecfdf5;
+            color: #15803d;
+        }
+
+        .activity-edited {
+            background: #fffbeb;
+            color: #b45309;
+        }
+
+        .activity-deleted {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .activity-synced {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .activity-action {
+            color: #1e293b;
+            font-size: 14px;
+            font-weight: 750;
+        }
+
+        .activity-details {
+            color: #64748b;
+            line-height: 1.5;
+            margin-top: 3px;
+        }
+
+        .activity-time {
+            color: #94a3b8;
+            font-size: 11px;
+        }
+
+        /* =========================================
+   PATIENT MODAL
+========================================= */
+
+        .modal {
+            background: rgba(15, 23, 42, 0.60);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-box {
+            max-width: 600px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow:
+                0 25px 60px rgba(15, 23, 42, 0.25),
+                0 5px 20px rgba(15, 23, 42, 0.12);
+            animation: modalIn 0.22s ease-out;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-box h2 {
+            color: #1e293b;
+            font-size: 21px;
+            padding-right: 35px;
+        }
+
+        .close-btn {
+            width: 35px;
+            height: 35px;
+            right: 18px;
+            top: 18px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            transition: 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #fee2e2;
+            transform: rotate(90deg);
+        }
+
+        /* =========================================
+   PATIENT DETAILS
+========================================= */
+
+        .detail {
+            padding: 12px 14px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            background: #f8fafc;
+            border: 1px solid #eef2f7;
+        }
+
+        .detail strong {
+            color: #64748b;
+            font-size: 10px;
+            letter-spacing: 0.7px;
+        }
+
+        .detail span {
+            color: #1e293b;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* =========================================
+   AI ANALYSIS
+========================================= */
+
+        .ai-box {
+            position: relative;
+            margin-top: 22px;
+            padding: 18px;
+            border: 1px solid #bfdbfe;
+            border-left: 5px solid #2563eb;
+            border-radius: 13px;
+            background:
+                linear-gradient(135deg,
+                    #eff6ff,
+                    #f8fbff);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.07);
+        }
+
+        .ai-box h3 {
+            color: #1d4ed8;
+            font-size: 15px;
+            margin-bottom: 9px;
+        }
+
+        .ai-box p {
+            color: #334155;
+            line-height: 1.6;
+            font-size: 13px;
+        }
+
+        /* =========================================
+   NO RESULTS
+========================================= */
+
+        .no-results {
+            margin-top: 15px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            background: #f8fafc;
+        }
+
+        /* =========================================
+   MOBILE
+========================================= */
+
+        @media (max-width: 600px) {
+
+            .modal-box {
+                padding: 22px;
+                border-radius: 16px;
+            }
+
+            .activity-item {
+                gap: 10px;
+                padding: 13px;
+            }
+
+            .activity-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 16px;
+            }
+
+            .activity-action {
+                font-size: 13px;
+            }
+
+            .detail {
+                padding: 11px;
+            }
+
+        }
+
+        /* =========================================
+   MODERN UI ENHANCEMENT - STEP 3
+   DASHBOARD + CHART + SYSTEM INFO
+========================================= */
+
+        /* =========================================
+   CHART SECTION
+========================================= */
+
+        .chart-container {
+            max-width: 520px;
+            height: 330px;
+            padding: 15px;
+        }
+
+        /* =========================================
+   CHART SECTION VISUAL
+========================================= */
+
+        .section:has(#priorityChart) {
+            background:
+                radial-gradient(circle at top right,
+                    rgba(37, 99, 235, 0.06),
+                    transparent 35%),
+                #ffffff;
+        }
+
+        .section:has(#priorityChart) h2 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* =========================================
+   SYSTEM STATUS
+========================================= */
+
+        #systemStatus {
+            transition:
+                background 0.3s ease,
+                color 0.3s ease,
+                box-shadow 0.3s ease;
+
+            max-width: 430px;
+            text-align: center;
+        }
+
+        /* =========================================
+   SEARCH AREA
+========================================= */
+
+        .filter-area {
+            background: #f8fafc;
+            padding: 13px;
+            border-radius: 13px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .filter-area input {
+            background: #ffffff;
+            border-color: #e2e8f0;
+        }
+
+        .filter-area select {
+            background: #ffffff;
+            min-width: 160px;
+        }
+
+        /* =========================================
+   PATIENT RECORD HEADER
+========================================= */
+
+        .section h2 {
+            position: relative;
+        }
+
+        .section h2::after {
+            content: "";
+            display: block;
+            width: 38px;
+            height: 3px;
+            margin-top: 8px;
+            border-radius: 10px;
+            background: linear-gradient(90deg,
+                    #2563eb,
+                    #06b6d4);
+        }
+
+        /* =========================================
+   DASHBOARD SPACING
+========================================= */
+
+        .cards+.section {
+            margin-top: 5px;
+        }
+
+        /* =========================================
+   SCROLLBAR
+========================================= */
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* =========================================
+   SMOOTH PAGE FEEL
+========================================= */
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            min-height: 100vh;
+        }
+
+        /* =========================================
+   CARD NUMBER ANIMATION
+========================================= */
+
+        .card .number {
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover .number {
+            transform: scale(1.04);
+        }
+
+        /* =========================================
+   SECTION HOVER
+========================================= */
+
+        .section {
+            transition:
+                box-shadow 0.2s ease,
+                transform 0.2s ease;
+        }
+
+        .section:hover {
+            box-shadow:
+                0 8px 25px rgba(15, 23, 42, 0.07);
+        }
+
+        /* =========================================
+   MOBILE CHART
+========================================= */
+
+        @media (max-width: 600px) {
+
+            .chart-container {
+                height: 280px;
+                padding: 5px;
+            }
+
+            #systemStatus {
+                max-width: 100%;
+                line-height: 1.5;
+            }
+
+            .filter-area {
+                padding: 10px;
+            }
+
+            .filter-area input {
+                min-width: 100%;
+            }
+
+            .filter-area select {
+                width: 100%;
+            }
+
+        }
+
+        .priority-moderate {
+            background: #FEF3C7;
+            color: #B45309;
+            border: 1px solid #F59E0B;
+        }
+    </style>
+</head>
+
+
+<body>
+
+    <!-- ================= HEADER ================= -->
+
+    <header>
+
+        <div class="logo-section">
+            <h1>MEDAURA AI</h1>
+            <p>“AI-Powered Care, Anywhere, Anytime.”</p>
+        </div>
+
+        <div class="header-right">
+
+            <a href="/register" class="nav-btn">
+                ➕ Register Patient
+            </a>
+
+            <a href="/book" class="nav-btn">
+                📅 Appointments
+            </a>
+
+            <a href="/assistant" class="nav-btn">
+                🤖 AI Assistant
+            </a>
+
+            <div class="status" id="systemStatus">
+                🔄 Checking system...
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- ================= MAIN ================= -->
+
+    <div class="container">
+
+
+        <!-- SUMMARY CARDS -->
+
+        <div class="cards">
+
+            <div class="card total">
+                <h3>👥 Total Patients</h3>
+                <div class="number" id="totalPatients">0</div>
+            </div>
+
+            <div class="card urgent">
+                <h3>🚨 Urgent</h3>
+                <div class="number" id="urgentPatients">0</div>
+            </div>
+
+            <div class="card moderate">
+                <h3>🟠 Moderate</h3>
+                <div class="number" id="moderatePatients">0</div>
+            </div>
+
+            <div class="card normal">
+                <h3>🟢 Normal</h3>
+                <div class="number" id="normalPatients">0</div>
+            </div>
+
+            <div class="card pending">
+                <h3>⏳ Pending Sync</h3>
+                <div class="number" id="pendingPatients">0</div>
+            </div>
+
+        </div>
+
+
+        <!-- ================= CHART ================= -->
+
+        <div class="section">
+
+            <h2>📊 Patient Statistics</h2>
+
+            <div class="chart-container">
+                <canvas id="priorityChart"></canvas>
+            </div>
+
+        </div>
+
+
+        <!-- ================= PATIENT RECORDS ================= -->
+
+        <div class="section">
+
+            <h2>👨‍⚕️ Patient Records</h2>
+
+
+            <!-- SEARCH + FILTER -->
+
+            <div class="filter-area">
+
+                <input type="text" id="searchPatient" placeholder="🔍 Search patient or symptoms..."
+                    oninput="filterPatients()">
+
+                <select id="priorityFilter" onchange="filterPatients()">
+
+                    <option value="ALL">
+                        All Patients
+                    </option>
+
+                    <option value="URGENT">
+                        🚨 Urgent
+                    </option>
+
+                    <option value="MODERATE">
+                        🟠 Moderate
+                    </option>
+
+                    <option value="NORMAL">
+                        🟢 Normal
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- TABLE -->
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>ID</th>
+                            <th>Patient</th>
+                            <th>Age</th>
+                            <th>Symptoms</th>
+                            <th>AI Priority</th>
+                            <th>Sync Status</th>
+                            <th>Details</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="patientTable">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <div id="noResults" class="no-results">
+                🔍 No matching patients found.
+            </div>
+
+            <!-- ================= ACTIVITY HISTORY ================= -->
+
+            <div class="section">
+
+                <h2>📜 Activity History</h2>
+
+                <div id="activityList" class="activity-list">
+
+                    <div class="no-activity">
+                        🔄 Loading activity history...
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= PATIENT MODAL ================= -->
+
+    <div class="modal" id="patientModal" onclick="closeOutside(event)">
+
+        <div class="modal-box">
+
+            <button class="close-btn" onclick="closePatient()">
+                ×
+            </button>
+
+
+            <h2>
+                👤 Patient Details
+            </h2>
+
+
+            <div class="detail">
+                <strong>NAME</strong>
+                <span id="pName">-</span>
+            </div>
+
+
+            <div class="detail">
+                <strong>AGE</strong>
+                <span id="pAge">-</span>
+            </div>
+
+
+            <div class="detail">
+                <strong>GENDER</strong>
+                <span id="pGender">-</span>
+            </div>
+
+
+            <div class="detail">
+                <strong>PHONE</strong>
+                <span id="pPhone">-</span>
+            </div>
+
+
+            <div class="detail">
+                <strong>SYMPTOMS</strong>
+                <span id="pSymptoms">-</span>
+            </div>
+
+
+            <div class="detail">
+                <strong>AI PRIORITY</strong>
+                <span id="pPriority" class="priority">
+                    -
+                </span>
+            </div>
+
+
+            <div class="ai-box">
+
+                <h3>
+                    🤖 AI Analysis
+                </h3>
+
+                <p id="pMessage">
+                    -
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= JAVASCRIPT ================= -->
+
+    <script>
+
+        let priorityChart = null;
+
+
+        /* =========================================
+           SERVER STATUS
+        ========================================= */
+
+        async function checkServerStatus() {
+
+            const status =
+                document.getElementById("systemStatus");
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/server-status",
+                        {
+                            cache: "no-store"
+                        }
+                    );
+
+                const data =
+                    await response.json();
+
+
+                if (data.online) {
+
+                    status.innerHTML =
+                        "🟢 Local System Active &nbsp; | &nbsp; ☁️ Server Connected";
+
+                    status.style.background =
+                        "#dcfce7";
+
+                    status.style.color =
+                        "#166534";
+
+                } else {
+
+                    status.innerHTML =
+                        "🟢 Local System Active &nbsp; | &nbsp; ☁️ Server Offline — Data Saved Locally";
+
+                    status.style.background =
+                        "#fef3c7";
+
+                    status.style.color =
+                        "#92400e";
+                }
+
+            }
+
+            catch (error) {
+
+                status.innerHTML =
+                    "🟢 Local System Active &nbsp; | &nbsp; ☁️ Server Offline — Data Saved Locally";
+
+                status.style.background =
+                    "#fef3c7";
+
+                status.style.color =
+                    "#92400e";
+            }
+        }
+
+
+        /* =========================================
+           PRIORITY CHART
+        ========================================= */
+
+        function updatePriorityChart(
+            urgent,
+            moderate,
+            normal
+        ) {
+
+            const ctx =
+                document
+                    .getElementById("priorityChart")
+                    .getContext("2d");
+
+
+            if (priorityChart) {
+
+                priorityChart.destroy();
+
+            }
+
+
+            priorityChart =
+                new Chart(
+                    ctx,
+                    {
+
+                        type: "doughnut",
+
+                        data: {
+
+                            labels: [
+                                "Urgent",
+                                "Moderate",
+                                "Normal"
+                            ],
+
+                            datasets: [
+                                {
+
+                                    data: [
+                                        urgent,
+                                        moderate,
+                                        normal
+                                    ],
+
+                                    borderWidth: 1
+
+                                }
+                            ]
+
+                        },
+
+                        options: {
+
+                            responsive: true,
+
+                            maintainAspectRatio: false,
+
+                            plugins: {
+
+                                legend: {
+
+                                    position: "bottom"
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+                );
+        }
+
+
+
+        /* =========================================
+           LOAD PATIENTS
+        ========================================= */
+
+        async function loadPatients() {
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/patients",
+                        {
+                            cache: "no-store"
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!data.success) {
+
+                    return;
+
+                }
+
+
+                const patients =
+                    data.patients;
+
+
+                /* TOTAL */
+
+                document
+                    .getElementById("totalPatients")
+                    .textContent =
+                    patients.length;
+
+
+                /* PRIORITY COUNT */
+
+                const urgent =
+                    patients.filter(
+                        p => p.ai_priority === "URGENT"
+                    ).length;
+
+
+                const moderate =
+                    patients.filter(
+                        p => p.ai_priority === "MODERATE"
+                    ).length;
+
+
+                const normal =
+                    patients.filter(
+                        p => p.ai_priority === "NORMAL"
+                    ).length;
+
+                const pending =
+                    patients.filter(
+                        p => p.synced === 0
+                    ).length;
+
+
+                document
+                    .getElementById("urgentPatients")
+                    .textContent =
+                    urgent;
+
+
+                document
+                    .getElementById("moderatePatients")
+                    .textContent =
+                    moderate;
+
+
+                document
+                    .getElementById("normalPatients")
+                    .textContent =
+                    normal;
+
+                document
+                    .getElementById("pendingPatients")
+                    .textContent =
+                    pending;
+
+
+                /* CHART */
+
+                updatePriorityChart(
+                    urgent,
+                    moderate,
+                    normal
+                );
+
+
+                /* TABLE */
+
+                const table =
+                    document.getElementById(
+                        "patientTable"
+                    );
+
+
+                table.innerHTML = "";
+
+
+                patients.forEach(
+                    patient => {
+
+
+                        let priorityClass =
+                            patient.ai_priority === "URGENT"
+
+                                ? "priority-urgent"
+
+                                : patient.ai_priority === "MODERATE"
+
+                                    ? "priority-moderate"
+
+                                    : "priority-normal";
+
+
+                        let priorityText =
+                            patient.ai_priority ||
+                            "PENDING";
+
+
+                        let syncText =
+                            patient.synced === 1
+
+                                ? "✅ Synced"
+
+                                : "⏳ Pending";
+
+
+                        const row =
+                            document.createElement("tr");
+
+
+                        row.innerHTML = `
+
+                    <td>
+                        ${patient.id}
+                    </td>
+
+                    <td>
+                        <strong>
+                            ${escapeHTML(patient.name)}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${patient.age || "-"}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            patient.symptoms || "-"
+                        )}
+                    </td>
+
+                    <td>
+
+                        <span
+                            class="priority ${priorityClass}"
+                        >
+                            ${priorityText}
+                        </span>
+
+                    </td>
+
+                    <td class="sync">
+                        ${syncText}
+                    </td>
+
+                    <td>
+
+                       <button
+    class="view-btn"
+    onclick="viewPatient(${patient.id})"
+>
+    View
+</button>
+
+<button
+    class="view-btn"
+    style="background:#f59e0b;"
+    onclick="editPatient(${patient.id})"
+>
+    ✏️ Edit
+</button>
+
+<button
+    class="view-btn"
+    style="background:#dc2626;"
+    onclick="deletePatient(${patient.id})"
+>
+    🗑️ Delete
+</button>
+
+                    </td>
+
+                `;
+
+
+                        /*
+                            Store complete patient object
+                            inside the row.
+                        */
+
+                        row.patientData = patient;
+
+
+                        table.appendChild(row);
+
+                    }
+                );
+
+
+                /*
+                    Re-apply current search/filter
+                    after auto refresh.
+                */
+
+                filterPatients();
+
+            }
+
+            catch (error) {
+
+                console.log(
+                    "Unable to load patient records:",
+                    error
+                );
+
+            }
+        }
+
+
+
+        /* =========================================
+           SEARCH + PRIORITY FILTER
+        ========================================= */
+
+        function filterPatients() {
+
+            const searchInput =
+                document.getElementById(
+                    "searchPatient"
+                );
+
+
+            const prioritySelect =
+                document.getElementById(
+                    "priorityFilter"
+                );
+
+
+            const searchText =
+                searchInput.value
+                    .toLowerCase()
+                    .trim();
+
+
+            const selectedPriority =
+                prioritySelect.value;
+
+
+            const rows =
+                document.querySelectorAll(
+                    "#patientTable tr"
+                );
+
+
+            let visibleCount = 0;
+
+
+            rows.forEach(
+                row => {
+
+                    const rowText =
+                        row.textContent
+                            .toLowerCase();
+
+
+                    const priorityElement =
+                        row.querySelector(
+                            ".priority"
+                        );
+
+
+                    let patientPriority =
+                        "";
+
+
+                    if (priorityElement) {
+
+                        patientPriority =
+                            priorityElement.textContent
+                                .trim()
+                                .toUpperCase();
+
+                    }
+
+
+                    const matchesSearch =
+                        rowText.includes(
+                            searchText
+                        );
+
+
+                    const matchesPriority =
+                        selectedPriority === "ALL"
+
+                        ||
+
+                        patientPriority ===
+                        selectedPriority;
+
+
+                    if (
+                        matchesSearch &&
+                        matchesPriority
+                    ) {
+
+                        row.style.display = "";
+
+                        visibleCount++;
+
+                    }
+
+                    else {
+
+                        row.style.display = "none";
+
+                    }
+
+                }
+            );
+
+
+            /* NO RESULTS */
+
+            const noResults =
+                document.getElementById(
+                    "noResults"
+                );
+
+
+            if (
+                rows.length > 0 &&
+                visibleCount === 0
+            ) {
+
+                noResults.style.display =
+                    "block";
+
+            }
+
+            else {
+
+                noResults.style.display =
+                    "none";
+
+            }
+
+        }
+
+
+
+        /* =========================================
+           VIEW PATIENT
+        ========================================= */
+
+        async function viewPatient(patientId) {
+
+            try {
+
+                const rows =
+                    document.querySelectorAll(
+                        "#patientTable tr"
+                    );
+
+
+                let patient = null;
+
+
+                rows.forEach(
+                    row => {
+
+                        if (
+                            row.patientData &&
+                            Number(row.patientData.id) ===
+                            Number(patientId)
+                        ) {
+
+                            patient =
+                                row.patientData;
+
+                        }
+
+                    }
+                );
+
+
+                if (!patient) {
+
+                    return;
+
+                }
+
+
+                document
+                    .getElementById("pName")
+                    .textContent =
+                    patient.name || "-";
+
+
+                document
+                    .getElementById("pAge")
+                    .textContent =
+                    patient.age || "-";
+
+
+                document
+                    .getElementById("pGender")
+                    .textContent =
+                    patient.gender ||
+                    "Not available";
+
+
+                document
+                    .getElementById("pPhone")
+                    .textContent =
+                    patient.phone ||
+                    "Not available";
+
+
+                document
+                    .getElementById("pSymptoms")
+                    .textContent =
+                    patient.symptoms ||
+                    "Not available";
+
+
+                const priority =
+                    document.getElementById(
+                        "pPriority"
+                    );
+
+
+                priority.textContent =
+                    patient.ai_priority ||
+                    "PENDING";
+
+
+                priority.className =
+                    "priority " +
+
+                    (
+                        patient.ai_priority ===
+                            "URGENT"
+
+                            ? "priority-urgent"
+
+                            :
+
+                            patient.ai_priority ===
+                                "MODERATE"
+
+                                ? "priority-moderate"
+
+                                : "priority-normal"
+                    );
+
+
+                document
+                    .getElementById("pMessage")
+                    .textContent =
+                    patient.ai_message ||
+
+                    "AI analysis is not available for this patient.";
+
+
+                document
+                    .getElementById("patientModal")
+                    .style.display =
+                    "flex";
+
+            }
+
+            catch (error) {
+
+                console.log(
+                    "Unable to show patient:",
+                    error
+                );
+
+            }
+
+        }
+
+
+
+        /* =========================================
+           CLOSE PATIENT MODAL
+        ========================================= */
+
+        function closePatient() {
+
+            document
+                .getElementById("patientModal")
+                .style.display =
+                "none";
+
+        }
+
+
+        function closeOutside(event) {
+
+            if (
+                event.target.id ===
+                "patientModal"
+            ) {
+
+                closePatient();
+
+            }
+
+        }
+
+        /* =========================================
+           EDIT PATIENT
+        ========================================= */
+
+        async function editPatient(patientId) {
+
+            const rows =
+                document.querySelectorAll("#patientTable tr");
+
+            let patient = null;
+
+            rows.forEach(row => {
+
+                if (
+                    row.patientData &&
+                    Number(row.patientData.id) === Number(patientId)
+                ) {
+                    patient = row.patientData;
+                }
+
+            });
+
+            if (!patient) {
+                alert("Patient not found");
+                return;
+            }
+
+
+            const name = prompt(
+                "Patient Name:",
+                patient.name || ""
+            );
+
+            if (name === null) return;
+
+
+            const age = prompt(
+                "Age:",
+                patient.age || ""
+            );
+
+            if (age === null) return;
+
+
+            const gender = prompt(
+                "Gender:",
+                patient.gender || ""
+            );
+
+            if (gender === null) return;
+
+
+            const phone = prompt(
+                "Phone:",
+                patient.phone || ""
+            );
+
+            if (phone === null) return;
+
+
+            const symptoms = prompt(
+                "Symptoms:",
+                patient.symptoms || ""
+            );
+
+            if (symptoms === null) return;
+
+
+            try {
+
+                const response = await fetch(
+                    `/edit-patient/${patientId}`,
+                    {
+                        method: "PUT",
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify({
+
+                            name: name,
+                            age: age,
+                            gender: gender,
+                            phone: phone,
+                            symptoms: symptoms
+
+                        })
+                    }
+                );
+
+
+                const data = await response.json();
+
+
+                if (data.success) {
+
+                    alert(
+                        "✅ Patient updated successfully!"
+                    );
+
+                    loadPatients();
+
+                }
+
+                else {
+
+                    alert(
+                        "❌ Update failed: " +
+                        data.message
+                    );
+
+                }
+
+            }
+
+            catch (error) {
+
+                alert(
+                    "❌ Unable to update patient"
+                );
+
+                console.log(error);
+
+            }
+
+        }
+
+
+
+        /* =========================================
+           DELETE PATIENT
+        ========================================= */
+
+        async function deletePatient(patientId) {
+
+            const confirmDelete =
+                confirm(
+                    "⚠️ Are you sure you want to delete this patient?"
+                );
+
+
+            if (!confirmDelete) {
+                return;
+            }
+
+
+            try {
+
+                const response = await fetch(
+                    `/delete-patient/${patientId}`,
+                    {
+                        method: "DELETE"
+                    }
+                );
+
+
+                const data =
+                    await response.json();
+
+
+                if (data.success) {
+
+                    alert(
+                        "🗑️ Patient deleted successfully!"
+                    );
+
+                    loadPatients();
+
+                }
+
+                else {
+
+                    alert(
+                        "❌ Delete failed: " +
+                        data.message
+                    );
+
+                }
+
+            }
+
+            catch (error) {
+
+                alert(
+                    "❌ Unable to delete patient"
+                );
+
+                console.log(error);
+
+            }
+
+        }
+        /* =========================================
+   LOAD ACTIVITY HISTORY
+========================================= */
+
+        async function loadActivityLogs() {
+
+            const activityList =
+                document.getElementById("activityList");
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/activity-logs",
+                        {
+                            cache: "no-store"
+                        }
+                    );
+
+                const data =
+                    await response.json();
+
+
+                if (!data.success) {
+
+                    activityList.innerHTML = `
+                <div class="no-activity">
+                    ❌ Unable to load activity history.
+                </div>
+            `;
+
+                    return;
+                }
+
+
+                const logs = data.logs;
+
+
+                if (logs.length === 0) {
+
+                    activityList.innerHTML = `
+                <div class="no-activity">
+                    📭 No activities yet.
+                </div>
+            `;
+
+                    return;
+                }
+
+
+                /*
+                    Show latest 20 activities
+                */
+
+                const recentLogs =
+                    logs.slice(0, 20);
+
+
+                activityList.innerHTML = "";
+
+
+                recentLogs.forEach(log => {
+
+                    let icon = "📌";
+                    let activityClass = "";
+                    let actionText = log.action;
+
+
+                    if (log.action === "PATIENT_ADDED") {
+
+                        icon = "➕";
+                        activityClass = "activity-added";
+                        actionText = "Patient Added";
+
+                    }
+
+                    else if (log.action === "PATIENT_EDITED") {
+
+                        icon = "✏️";
+                        activityClass = "activity-edited";
+                        actionText = "Patient Edited";
+
+                    }
+
+                    else if (log.action === "PATIENT_DELETED") {
+
+                        icon = "🗑️";
+                        activityClass = "activity-deleted";
+                        actionText = "Patient Deleted";
+
+                    }
+
+                    else if (log.action === "PATIENT_SYNCED") {
+
+                        icon = "☁️";
+                        activityClass = "activity-synced";
+                        actionText = "Patient Synced";
+
+                    }
+
+
+                    const item =
+                        document.createElement("div");
+
+                    item.className =
+                        "activity-item";
+
+
+                    item.innerHTML = `
+
+                <div
+                    class="activity-icon ${activityClass}"
+                >
+                    ${icon}
+                </div>
+
+                <div class="activity-info">
+
+                    <div class="activity-action">
+                        ${actionText}
+                    </div>
+
+                    <div class="activity-details">
+                        ${escapeHTML(
+                        log.details || ""
+                    )}
+                    </div>
+
+                </div>
+
+                <div class="activity-time">
+                    ${formatActivityTime(
+                        log.created_at
+                    )}
+                </div>
+
+            `;
+
+
+                    activityList.appendChild(item);
+
+                });
+
+            }
+
+            catch (error) {
+
+                console.log(
+                    "Unable to load activity logs:",
+                    error
+                );
+
+                activityList.innerHTML = `
+            <div class="no-activity">
+                ❌ Unable to load activity history.
+            </div>
+        `;
+
+            }
+
+        }
+
+
+
+        /* =========================================
+           FORMAT ACTIVITY TIME
+        ========================================= */
+
+        function formatActivityTime(timestamp) {
+
+            if (!timestamp) {
+                return "-";
+            }
+
+
+            const date =
+                new Date(
+                    timestamp.replace(" ", "T") + "Z"
+                );
+
+
+            if (isNaN(date.getTime())) {
+                return timestamp;
+            }
+
+
+            return date.toLocaleString(
+                "en-IN",
+                {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }
+            );
+
+        }
+        /* =========================================
+           ESCAPE HTML
+        ========================================= */
+
+        function escapeHTML(value) {
+
+            const div =
+                document.createElement("div");
+
+            div.textContent =
+                value;
+
+            return div.innerHTML;
+
+        }
+
+
+
+        /* =========================================
+           INITIAL LOAD
+        ========================================= */
+
+        loadPatients();
+
+        loadActivityLogs();
+
+        checkServerStatus();
+
+
+
+        /* =========================================
+           AUTO REFRESH
+        ========================================= */
+
+        setInterval(
+            loadPatients,
+            5000
+        );
+
+        setInterval(
+            loadActivityLogs,
+            5000
+        );
+
+        setInterval(
+            checkServerStatus,
+            3000
+        );
+
+    </script>
+
+</body>
+
+</html>

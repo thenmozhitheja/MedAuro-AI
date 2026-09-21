@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Offline AI Hospital - Patient Registration</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f6f8;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 25px;
+            margin-bottom: 5px;
+        }
+
+        .form-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            background: #007bff;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .urgent {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .moderate {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .normal {
+            background: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="header">
+            <h1>🏥 Offline AI Hospital</h1>
+            <p>Patient Registration</p>
+        </div>
+
+        <div class="form-box">
+
+            <form id="patientForm">
+
+                <div class="form-group">
+                    <label>Patient Name</label>
+                    <input type="text" id="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Age</label>
+                    <input type="number" id="age" min="1" max="120" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Gender</label>
+                    <select id="gender">
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" id="phone">
+                </div>
+
+                <div class="form-group">
+                    <label>Symptoms</label>
+                    <textarea id="symptoms" placeholder="Example: chest pain, fever, headache..." required></textarea>
+                </div>
+
+                <button type="submit">
+                    🤖 Analyze & Register Patient
+                </button>
+
+            </form>
+
+            <div id="result"></div>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        document.getElementById("patientForm").addEventListener("submit", async function (event) {
+
+            event.preventDefault();
+
+            const resultBox = document.getElementById("result");
+
+            const patientData = {
+                name: document.getElementById("name").value,
+                age: document.getElementById("age").value,
+                gender: document.getElementById("gender").value,
+                phone: document.getElementById("phone").value,
+                symptoms: document.getElementById("symptoms").value
+            };
+
+            try {
+
+                const response = await fetch("/register_patient", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify(patientData)
+
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+
+                    resultBox.style.display = "block";
+
+                    resultBox.className =
+                        data.ai_priority === "URGENT"
+                            ? "urgent"
+                            : data.ai_priority === "MODERATE"
+                                ? "moderate"
+                                : "normal";
+
+                    resultBox.innerHTML = `
+                        <h3>✅ Patient Registered</h3>
+                        <br>
+                        <p><strong>AI Priority:</strong> ${data.ai_priority}</p>
+                        <p><strong>AI Message:</strong> ${data.ai_message}</p>
+                        <br>
+                        <p>💾 Patient saved locally.</p>
+                    `;
+
+                } else {
+
+                    resultBox.style.display = "block";
+                    resultBox.className = "urgent";
+                    resultBox.textContent = data.message;
+
+                }
+
+            } catch (error) {
+
+                resultBox.style.display = "block";
+                resultBox.className = "urgent";
+                resultBox.textContent =
+                    "Unable to connect to the local hospital system.";
+
+            }
+
+        });
+
+    </script>
+
+</body>
+
+</html>
